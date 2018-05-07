@@ -64,7 +64,7 @@ func (l *listener) execute(e *events, d interface{}) {
 	}(e)
 }
 
-type events struct {
+type Events struct {
 	// Mutex to prevent race conditions within the Emitter.
 	*sync.RWMutex
 	// Map of listener on event name
