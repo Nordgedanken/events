@@ -51,7 +51,7 @@ func newListener(on string, fn func(interface{}) error) *listener {
 }
 
 func (l *listener) execute(e *Events, d interface{}) {
-	log.Info("Executing on:", l.on)
+	log.Println("Executing on:", l.on)
 
 	e.wg.Add(1)
 	go func(e *Events) {
