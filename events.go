@@ -3,7 +3,6 @@ package events
 import (
 	"sync"
 	"time"
-	log "github.com/Sirupsen/logrus"
 )
 
 type Dispatcher interface {
@@ -68,7 +67,7 @@ type Events struct {
 	// Mutex to prevent race conditions within the Emitter.
 	*sync.RWMutex
 	// Map of listener on event name
-	liteners  map[string][]listener
+	listeners  map[string][]listener
 	errorFn   ErrorListenerFn
 	wg        sync.WaitGroup
 	errCh     chan ListenerError
@@ -79,7 +78,7 @@ type Events struct {
 func New() (e *Events) {
 	e = new(Events)
 	e.RWMutex = new(sync.RWMutex)
-	e.liteners = make(map[string][]listener)
+	e.listeners = make(map[string][]listener)
 	e.errCh = make(chan ListenerError)
 
 	go func(errCh chan ListenerError) {
@@ -93,7 +92,6 @@ func New() (e *Events) {
 		}
 	}(e.errCh)
 
-	log.Info("created")
 	return
 }
 
@@ -121,9 +119,14 @@ func (e *Events) GetEventRepo() EventRepo {
 func (e *Events) On(on string, fn func(interface{}) error) {
 	l := newListener(on, fn)
 	e.RWMutex.Lock()
-	e.liteners[on] = append(e.liteners[on], *l)
+	e.listeners[on] = append(e.listeners[on], *l)
 	e.RWMutex.Unlock()
-	log.Info("Added listener on:", on)
+}
+
+func (e *Events) Remove(on string) {
+	e.RWMutex.Lock()
+	e.listeners[on] = nil
+	e.RWMutex.Unlock()
 }
 
 func (e *Events) Raise(on string, data interface{}) {
@@ -132,7 +135,7 @@ func (e *Events) Raise(on string, data interface{}) {
 		e.eventRepo.Set(on, data)
 	}
 
-	for _, l := range e.liteners[on] {
+	for _, l := range e.listeners[on] {
 		l.execute(e, data)
 	}
 }
