@@ -9,7 +9,7 @@ type InMemoryESRepo struct {
 	*sync.RWMutex
 }
 
-func (e *events) AddInMemoryEventRepo() {
+func (e *Events) AddInMemoryEventRepo() {
 	e.eventRepo = NewInMemESRepo()
 	return
 }
