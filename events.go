@@ -50,11 +50,11 @@ func newListener(on string, fn func(interface{}) error) *listener {
 	}
 }
 
-func (l *listener) execute(e *events, d interface{}) {
+func (l *listener) execute(e *Events, d interface{}) {
 	log.Info("Executing on:", l.on)
 
 	e.wg.Add(1)
-	go func(e *events) {
+	go func(e *Events) {
 		err := l.fn(d)
 		defer e.wg.Done()
 
@@ -76,8 +76,8 @@ type Events struct {
 	eventRepo EventRepo
 }
 
-func New() (e *events) {
-	e = new(events)
+func New() (e *Events) {
+	e = new(Events)
 	e.RWMutex = new(sync.RWMutex)
 	e.liteners = make(map[string][]listener)
 	e.errCh = make(chan ListenerError)
@@ -97,28 +97,28 @@ func New() (e *events) {
 	return
 }
 
-func NewWithErrListener(el ErrorListenerFn) (e *events){
+func NewWithErrListener(el ErrorListenerFn) (e *Events){
 	e = New()
 	e.OnError(el)
 	return
 }
 
-func (e *events) OnError(el ErrorListenerFn) {
+func (e *Events) OnError(el ErrorListenerFn) {
 	e.errorFn = el
 	return
 }
 
-func (e *events) AddEventRepo(es EventRepo) {
+func (e *Events) AddEventRepo(es EventRepo) {
 	e.eventRepo = es
 	return
 }
 
-func (e *events) GetEventRepo() EventRepo {
+func (e *Events) GetEventRepo() EventRepo {
 	return e.eventRepo
 }
 
 
-func (e *events) On(on string, fn func(interface{}) error) {
+func (e *Events) On(on string, fn func(interface{}) error) {
 	l := newListener(on, fn)
 	e.RWMutex.Lock()
 	e.liteners[on] = append(e.liteners[on], *l)
@@ -126,7 +126,7 @@ func (e *events) On(on string, fn func(interface{}) error) {
 	log.Info("Added listener on:", on)
 }
 
-func (e *events) Raise(on string, data interface{}) {
+func (e *Events) Raise(on string, data interface{}) {
 
 	if e.eventRepo != nil {
 		e.eventRepo.Set(on, data)
@@ -137,15 +137,15 @@ func (e *events) Raise(on string, data interface{}) {
 	}
 }
 
-func (e *events) Wait() {
+func (e *Events) Wait() {
 	e.wg.Wait()
 }
 
-func (e *events) Close() {
+func (e *Events) Close() {
 	close(e.errCh)
 }
 
-func (e *events) raiseError(err ListenerError) {
+func (e *Events) raiseError(err ListenerError) {
 	if e.errorFn != nil {
 		e.wg.Add(1)
 		defer e.wg.Done()
