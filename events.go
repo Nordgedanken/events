@@ -50,6 +50,16 @@ func newListener(on string, fn func(interface{}) error) *listener {
 	}
 }
 
+func (l *listener) executeBlocking(e *Events, d interface{}) {
+	log.Println("Executing blocking on:", l.on)
+
+	err := l.fn(d)
+
+	if err != nil {
+		e.errCh <- newError(err, l.on, d, l.fn)
+	}
+}
+
 func (l *listener) execute(e *Events, d interface{}) {
 	log.Println("Executing on:", l.on)
 
@@ -129,6 +139,18 @@ func (e *Events) Remove(on string) {
 	e.listeners[on] = nil
 	e.RWMutex.Unlock()
 }
+
+func (e *Events) RaiseBlocking(on string, data interface{}) {
+
+	if e.eventRepo != nil {
+		e.eventRepo.Set(on, data)
+	}
+
+	for _, l := range e.listeners[on] {
+		l.executeBlocking(e, data)
+	}
+}
+
 
 func (e *Events) Raise(on string, data interface{}) {
 
