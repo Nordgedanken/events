@@ -51,7 +51,7 @@ func newListener(on string, fn func(interface{}) error) *listener {
 }
 
 func (l *listener) executeBlocking(e *Events, d interface{}) {
-	log.Println("Executing blocking on:", l.on)
+	log.Debugln("Executing blocking on:", l.on)
 
 	err := l.fn(d)
 
@@ -61,7 +61,7 @@ func (l *listener) executeBlocking(e *Events, d interface{}) {
 }
 
 func (l *listener) execute(e *Events, d interface{}) {
-	log.Println("Executing on:", l.on)
+	log.Debugln("Executing on:", l.on)
 
 	e.wg.Add(1)
 	go func(e *Events) {
