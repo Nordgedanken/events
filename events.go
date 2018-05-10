@@ -3,7 +3,7 @@ package events
 import (
 	"sync"
 	"time"
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
 type Dispatcher interface {
